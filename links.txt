@@ -1,0 +1,3 @@
+https://www.youtube.com/watch?v=doDUihpj6ro
+https://github.com/nicknochnack/ActionDetectionforSignLanguage/blob/main/Action%20Detection%20Tutorial.ipynb
+https://didatica.tech/a-biblioteca-scikit-learn-pyhton-para-machine-learning/
