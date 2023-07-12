@@ -83,11 +83,71 @@ model.add(Dense(32, activation='relu'))
 model.add(Dense(actions.shape[0], activation='softmax')) # softmax goes 0 to 1 prediction
 print("Actions shape:" , actions.shape[0]) ## 4 labels/actions
 
-#example result
-res = [.7, 0.5, 0.2, 0.1] ## the position predicted successfully is 0.7 (0->1) so its position 0 of array so its "ola"
+####example result
+#exampleRes = [.7, 0.5, 0.2, 0.1] ## the position predicted successfully is 0.7 (0->1) so its position 0 of array so its "ola"
+#actions[np.argmax(exampleRes)] ## array posicao 0
+#print("position predicted: " , np.argmax(exampleRes))
+#print("label predicted:" , actions[np.argmax(exampleRes)])
 
-actions[np.argmax(res)] ## array posicao 0
+#compile model
+##loss must be categorical_crossentropy for multiple class binary classification models
+##metrics is optional
+model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy']) ##change optimizer to another for testing
 
-print("position predicted: " , np.argmax(res))
-print("label predicted:" , actions[np.argmax(res)])
+#fit and train model
+model.fit(X_train, Y_train, epochs=500, callbacks=[tb_callback]) ##avaliar epochs se esta muito alto para o numero de dados e avalisar loss + accuracy
 
+
+
+### lOGS TENSORFLOW ######
+
+## cd C:\Users\jessi\Desktop\GIT\Sign Language recognition\lstm\Logs\train>
+## RUN  tensorboard --logdir=.
+## open browser
+
+model.summary()
+
+## ele diz que com modelo CNN precisamos de milhoes de registos e neste os parametros sao 600k
+
+## Layer (type)                Output Shape              Param #
+## =================================================================
+## lstm (LSTM)                 (None, 30, 64)            442112
+
+## lstm_1 (LSTM)               (None, 30, 128)           98816
+
+## lstm_2 (LSTM)               (None, 64)                49408
+
+## dense (Dense)               (None, 64)                4160
+
+## dense_1 (Dense)             (None, 32)                2080
+
+## dense_2 (Dense)             (None, 4)                 132
+## =================================================================
+## Total params: 596,708
+## Trainable params: 596,708
+## Non-trainable params: 0
+## _________________________________________________________________
+
+
+#### 8. Make Predictions -> TEST!!! ####
+
+res = model.predict(X_test)
+
+print("teste 0:" , actions[np.argmax(res[0])])
+print("teste 0:" , actions[np.argmax(Y_test[0])])
+
+print("teste 1:" , actions[np.argmax(res[1])])
+print("teste 1:" , actions[np.argmax(Y_test[1])])
+
+print("teste 2:" , actions[np.argmax(res[2])])
+print("teste 2:" , actions[np.argmax(Y_test[2])])
+
+print("teste 3:" , actions[np.argmax(res[3])])
+print("teste 3:" , actions[np.argmax(Y_test[3])])
+
+#### 9. Save Model ####
+
+model.save('handSignPSL.h5')
+
+## del model
+## model.load_weights('handSignPSL.h5')
