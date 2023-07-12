@@ -4,7 +4,7 @@ import os
 from matplotlib import pyplot as plt
 import time
 import mediapipe as mp
-
+from scipy import stats
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 
@@ -25,7 +25,7 @@ DATA_PATH = os.path.join('MP_Data')
 
 sequences, labels = [], []
 for action in actions:
-    for sequence in range(no_sequences):
+     for sequence in np.array(os.listdir(os.path.join(DATA_PATH, action))).astype(int):
         window = []
         for frame_num in range(sequence_length):
             res = np.load(os.path.join(DATA_PATH, action, str(sequence), "{}.npy".format(frame_num)))

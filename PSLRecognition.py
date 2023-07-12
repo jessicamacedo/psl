@@ -10,9 +10,11 @@ model = load_model('handSignPSL.h5')
 # 1. New detection variables
 sequence = []
 sentence = []
-threshold = 0.99
+predictions = []
+threshold = 0.8
 
-### 2. Keypoints using MP Holistic #####
+# Actions that we try to detect
+actions = np.array(['ola', 'obrigada', 'bomdia', 'boanoite'])
 
 ### 2. Keypoints using MP Holistic #####
 
@@ -59,95 +61,98 @@ def draw_styled_landmarks(image, results):
 
 cap = cv2.VideoCapture(0)
 
+def extract_keypoints(results):
+    pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33*4)
+    face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468*3)
+    lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
+    rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
+
+    #print("pose", pose)
+    #print("face", face)
+    print("lh", lh)
+    print("rh", rh)
+
+    if np.count_nonzero(lh) > 1 or np.count_nonzero(rh) > 1 :
+        return np.concatenate([pose, face, lh, rh])
+    else:
+        return 'empty'
+    
+colors = [(245,117,16), (117,245,16), (16,117,245), (219,112,147)]
+def prob_viz(res, actions, input_frame, colors):
+    output_frame = input_frame.copy()
+    for num, prob in enumerate(res):
+        cv2.rectangle(output_frame, (0,60+num*40), (int(prob*100), 90+num*40), colors[num], -1)
+        cv2.putText(output_frame, actions[num], (0, 85+num*40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
+        
+    return output_frame
+
 # Set mediapipe model 
-with mp_holistic.Holistic(min_detection_confidence=0.6, min_tracking_confidence=0.7) as holistic:
+with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
     while cap.isOpened():
+        # Loop through video length aka sequence length
+       # for frame_num in range(sequence_length):
+       
+            # Read feed
+            ret, frame = cap.read()
 
-        # Read feed
-        ret, frame = cap.read()
+            # Make detections
+            image, results = mediapipe_detection(frame, holistic)
+            # if results.left_hand_landmarks:
+                # print("results left hand-------", results.left_hand_landmarks.landmark)
+            # if results.right_hand_landmarks:
+                # print("results right hand-------", results.right_hand_landmarks.landmark)
 
-        # Make detections
-        image, results = mediapipe_detection(frame, holistic)
-       # print(results)
-
+            # Draw landmarks
+            draw_styled_landmarks(image, results)
         
-        # Draw landmarks
-        draw_styled_landmarks(image, results)
+            if results.left_hand_landmarks is None and results.right_hand_landmarks is None:
+                print('EMPTY TRANSLATION........')
+                cv2.putText(image, 'Please, put your hands closer to the screen.' , (0,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
 
-        ### 3. Extract Keypoint Values ###
+            else:
+              #  cv2.putText(image, 'Start detecting frame number: {}'.format(frame_num) , (0,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255, 0), 2, cv2.LINE_AA)
+                
+                keypoints = extract_keypoints(results)
+                sequence.append(keypoints)
+                sequence = sequence[-30:]
+                print("=======================================================================================================keypoints", keypoints)
+                print("sequence len:", len(sequence))
+                print("sequence:", sequence)
 
-        pose = []
-        for res in results.pose_landmarks.landmark:
-            test = np.array([res.x, res.y, res.z, res.visibility])
-            pose.append(test)
+                cv2.putText(image, 'SEQUENCE {}'.format(len(sequence)) , (100,400), cv2.FONT_HERSHEY_SIMPLEX, 1, (255 ,0, 0), 2, cv2.LINE_AA)
 
-        pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(132)
-        face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(1404)
-        lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
-        rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
-
-       # print("pose", pose)
-       # print("face", face)
-       # print("lh", lh)
-       # print("rh", rh)
-
-        def extract_keypoints(results):
-            pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33*4)
-            face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468*3)
-            lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
-            rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
-            return np.concatenate([pose, face, lh, rh])
-        
-        # 2. Prediction logic
-        keypoints = extract_keypoints(results)
-#         sequence.insert(0,keypoints)
-#         sequence = sequence[:30]
-        sequence.append(keypoints)
-        sequence = sequence[-30:]
-        
-        # Actions that we try to detect
-        actions = np.array(['ola', 'obrigada', 'bomdia', 'boanoite'])
-
-        if len(sequence) == 30:
-            res = model.predict(np.expand_dims(sequence, axis=0))[0]
-            print(res)
-            print("Resultado:", actions[np.argmax(res)])
-            
-            
-        #3. Viz logic
-            print("threshold:", threshold)
-            print('Res:', res[np.argmax(res)])
-            if res[np.argmax(res)] > threshold: 
-                if len(sentence) > 0: 
-                    if actions[np.argmax(res)] != sentence[-1]:
-                        sentence.append(actions[np.argmax(res)])
-                else:
-                    sentence.append(actions[np.argmax(res)])
-
-            if len(sentence) > 5: 
-                sentence = sentence[-5:]
-
-            # Viz probabilities
-            colors = [(245,117,16), (117,245,16), (16,117,245), (255,192,203)]
-            def prob_viz(res, actions, input_frame, colors):
-                output_frame = input_frame.copy()
-                for num, prob in enumerate(res):
-                    cv2.rectangle(output_frame, (0,60+num*40), (int(prob*100), 90+num*40), colors[num], -1)
-                    cv2.putText(output_frame, actions[num], (0, 85+num*40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
+                if len(sequence) == 30:
+                    res = model.predict(np.expand_dims(sequence, axis=0))[0]
+                    print(actions[np.argmax(res)])
                     
-                return output_frame
+                    
+                #3. Viz logic
+                    if res[np.argmax(res)] > threshold: 
+                        if len(sentence) > 0: 
+                            if actions[np.argmax(res)] != sentence[-1]:
+                                sentence.append(actions[np.argmax(res)])
+                        else:
+                            sentence.append(actions[np.argmax(res)])
 
-            image = prob_viz(res, actions, image, colors)
-            
-        cv2.rectangle(image, (0,0), (640, 40), (245, 117, 16), -1)
-        cv2.putText(image, ' '.join(sentence), (3,30), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-        
-        # Show to screen
-        cv2.imshow('OpenCV Feed', image)
+                    if len(sentence) > 5: 
+                        sentence = sentence[-5:]
 
-        # Break gracefully
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
+                    # Viz probabilities
+                    image = prob_viz(res, actions, image, colors)
+                    
+                  
+
+              
+                    
+                cv2.rectangle(image, (0,0), (640, 40), (245, 117, 16), -1)
+                cv2.putText(image, ' '.join(sentence), (3,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
+            # Show to screen
+            cv2.imshow('Start', image)
+            cv2.waitKey(100)
+
+            # Break gracefully
+            if cv2.waitKey(10) & 0xFF == ord('q'):
+                break
     cap.release()
     cv2.destroyAllWindows()

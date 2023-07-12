@@ -53,52 +53,8 @@ def draw_styled_landmarks(image, results):
                              mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2)
                              ) 
 
-cap = cv2.VideoCapture(0)
-
-# Set mediapipe model 
-with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
-    while cap.isOpened():
-
-        # Read feed
-        ret, frame = cap.read()
-
-        # Make detections
-        image, results = mediapipe_detection(frame, holistic)
-        #print(results)
-        
-        # Draw landmarks
-        draw_styled_landmarks(image, results)
-
-        # Show to screen
-        cv2.imshow('PSL detection', image)
-
-        # Break gracefully
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
-    cap.release()
-    cv2.destroyAllWindows()
-
-#len(results.left_hand_landmarks.landmark) #jupiter
-#draw_landmarks(frame, results) #jupiter
-#plt.imshow(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)) #jupiter
-
 
 ### 3. Extract Keypoint Values ###
-
-pose = []
-for res in results.pose_landmarks.landmark:
-    test = np.array([res.x, res.y, res.z, res.visibility])
-    pose.append(test)
-
-pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(132)
-face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(1404)
-lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
-rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
-
-print("pose", pose)
-print("face", face)
-print("lh", lh)
-print("rh", rh)
 
 def extract_keypoints(results):
     pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33*4)
@@ -106,13 +62,6 @@ def extract_keypoints(results):
     lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
     rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
     return np.concatenate([pose, face, lh, rh])
-
-result_test = extract_keypoints(results)
-
-print(result_test)
-
-np.save('0', result_test)
-np.load('0.npy')
 
 
 ### 4. Setup Folders for Collection ###
@@ -129,20 +78,14 @@ no_sequences = 30
 # Videos are going to be 30 frames in length
 sequence_length = 30
 
-# hello
-## 0
-## 1
-## 2
-## ...
-## 29
-# thanks
-
-# I love you
-
 for action in actions: 
+    
+    #dirmax = np.max(np.array(os.listdir(os.path.join(DATA_PATH, action))).astype(int))
     for sequence in range(no_sequences):
+    #for sequence in range(1,no_sequences+1):
         try: 
             os.makedirs(os.path.join(DATA_PATH, action, str(sequence)))
+            #os.makedirs(os.path.join(DATA_PATH, action, str(dirmax+sequence)))
         except:
             pass
 
@@ -179,7 +122,7 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
                     # Show to screen
                     cv2.imshow('OpenCV Feed', image)
-                    cv2.waitKey(2000)
+                    cv2.waitKey(1000)
                 else: 
                     cv2.putText(image, 'Collecting frames for {} Video Number {}'.format(action, sequence), (15,12), 
                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
@@ -194,6 +137,7 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
                 # Break gracefully
                 if cv2.waitKey(10) & 0xFF == ord('q'):
                     break
+    
                     
     cap.release()
     cv2.destroyAllWindows()
