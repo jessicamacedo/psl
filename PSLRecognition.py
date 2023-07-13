@@ -4,17 +4,17 @@ import numpy as np
 from matplotlib import pyplot as plt
 from keras.models import load_model
 
-model = load_model('handSignPSL.h5')
+model = load_model('OlaObrigada.h5')
 
 
 # 1. New detection variables
 sequence = []
 sentence = []
 predictions = []
-threshold = 0.8
+threshold = 0.5
 
 # Actions that we try to detect
-actions = np.array(['ola', 'obrigada', 'bomdia', 'boanoite'])
+actions = np.array(['ola', 'obrigada'])
 
 ### 2. Keypoints using MP Holistic #####
 
@@ -69,15 +69,15 @@ def extract_keypoints(results):
 
     #print("pose", pose)
     #print("face", face)
-    print("lh", lh)
-    print("rh", rh)
+    #print("lh", lh)
+    #print("rh", rh)
 
     if np.count_nonzero(lh) > 1 or np.count_nonzero(rh) > 1 :
         return np.concatenate([pose, face, lh, rh])
     else:
         return 'empty'
     
-colors = [(245,117,16), (117,245,16), (16,117,245), (219,112,147)]
+colors = [(245,117,16), (117,245,16)]
 def prob_viz(res, actions, input_frame, colors):
     output_frame = input_frame.copy()
     for num, prob in enumerate(res):
@@ -107,26 +107,25 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
         
             if results.left_hand_landmarks is None and results.right_hand_landmarks is None:
                 print('EMPTY TRANSLATION........')
-                cv2.putText(image, 'Please, put your hands closer to the screen.' , (0,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
-
+                cv2.putText(image, 'Please, put your hands closer' , (0,100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+                sequence = []
             else:
               #  cv2.putText(image, 'Start detecting frame number: {}'.format(frame_num) , (0,200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255, 0), 2, cv2.LINE_AA)
                 
                 keypoints = extract_keypoints(results)
-                sequence.append(keypoints)
-                sequence = sequence[-30:]
-                print("=======================================================================================================keypoints", keypoints)
-                print("sequence len:", len(sequence))
-                print("sequence:", sequence)
+                sequence.insert(0,keypoints)
+                sequence = sequence[:30]
+                #print("sequence len:", len(sequence))
 
                 cv2.putText(image, 'SEQUENCE {}'.format(len(sequence)) , (100,400), cv2.FONT_HERSHEY_SIMPLEX, 1, (255 ,0, 0), 2, cv2.LINE_AA)
 
                 if len(sequence) == 30:
                     res = model.predict(np.expand_dims(sequence, axis=0))[0]
-                    print(actions[np.argmax(res)])
+                    print(res)
+                    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', actions[np.argmax(res)])
+                    sequence = []
                     
-                    
-                #3. Viz logic
+                    #3. Viz logic
                     if res[np.argmax(res)] > threshold: 
                         if len(sentence) > 0: 
                             if actions[np.argmax(res)] != sentence[-1]:
@@ -134,22 +133,16 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
                         else:
                             sentence.append(actions[np.argmax(res)])
 
-                    if len(sentence) > 5: 
-                        sentence = sentence[-5:]
+                    if len(sentence) > 3: 
+                        sentence = sentence[-3:]
 
-                    # Viz probabilities
-                    image = prob_viz(res, actions, image, colors)
-                    
-                  
-
-              
-                    
+                # Viz probabilities
+                #image = prob_viz(res, actions, image, colors)
                 cv2.rectangle(image, (0,0), (640, 40), (245, 117, 16), -1)
                 cv2.putText(image, ' '.join(sentence), (3,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
             # Show to screen
             cv2.imshow('Start', image)
-            cv2.waitKey(100)
 
             # Break gracefully
             if cv2.waitKey(10) & 0xFF == ord('q'):

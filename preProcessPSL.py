@@ -7,25 +7,32 @@ import mediapipe as mp
 from scipy import stats
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM,Dense
+from tensorflow.keras.callbacks import TensorBoard
+
+# Path for exported data, numpy arrays
+DATA_PATH = os.path.join('MP_Data') 
 
 # Actions that we try to detect
-actions = np.array(['ola', 'obrigada', 'bomdia', 'boanoite'])
+actions = np.array(['ola', 'obrigada'])
 
-label_map = {label:num for num, label in enumerate(actions)}
 
-print(label_map)
 
 # Thirty videos worth of data
 no_sequences = 30
 # Videos are going to be 30 frames in length
 sequence_length = 30
+label_map = {label:num for num, label in enumerate(actions)}
 
-# Path for exported data, numpy arrays
-DATA_PATH = os.path.join('MP_Data') 
+print(label_map)
+
+
 
 sequences, labels = [], []
 for action in actions:
-     for sequence in np.array(os.listdir(os.path.join(DATA_PATH, action))).astype(int):
+    for sequence in range(no_sequences):
         window = []
         for frame_num in range(sequence_length):
             res = np.load(os.path.join(DATA_PATH, action, str(sequence), "{}.npy".format(frame_num)))
@@ -60,10 +67,6 @@ print("y_test:" , Y_test.shape)
 
 ## 7. Build and Train LSTM Neural Network KERAS AND TENSORFLOW ##
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-from tensorflow.keras.callbacks import TensorBoard
-
 log_dir = os.path.join('Logs')
 tb_callback = TensorBoard(log_dir=log_dir)
 
@@ -95,7 +98,7 @@ print("Actions shape:" , actions.shape[0]) ## 4 labels/actions
 model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy']) ##change optimizer to another for testing
 
 #fit and train model
-model.fit(X_train, Y_train, epochs=500, callbacks=[tb_callback]) ##avaliar epochs se esta muito alto para o numero de dados e avalisar loss + accuracy
+model.fit(X_train, Y_train, epochs=2000, callbacks=[tb_callback]) ##avaliar epochs se esta muito alto para o numero de dados e avalisar loss + accuracy
 
 
 
@@ -142,12 +145,10 @@ print("teste 1:" , actions[np.argmax(Y_test[1])])
 print("teste 2:" , actions[np.argmax(res[2])])
 print("teste 2:" , actions[np.argmax(Y_test[2])])
 
-print("teste 3:" , actions[np.argmax(res[3])])
-print("teste 3:" , actions[np.argmax(Y_test[3])])
 
 #### 9. Save Model ####
 
-model.save('handSignPSL.h5')
+model.save('OlaObrigada.h5')
 
 ## del model
 ## model.load_weights('handSignPSL.h5')
