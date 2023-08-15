@@ -86,6 +86,8 @@ for action in actions:
 ## Colect 30 frames of video motion on respective folder MP_DATA
 
 cap = cv2.VideoCapture(0)
+
+
 # Set mediapipe model 
 with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
     
