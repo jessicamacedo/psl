@@ -65,9 +65,9 @@ DATA_PATH = os.path.join('MP_Data')
 # Actions that we try to detect
 # Ações que tentamos detectar
 actions = np.array([
-    {"texto": "Mas recusou-se a sair do relvado até que o árbitro lhe fosse explicar o cartão vermelho.", "inicio": 0, "fim": 6},
-    {"texto": "Quase cinco minutos depois, a conversa aconteceu e Sérgio Conceição abandonou o relevado.", "inicio": 7, "fim": 12},
-    {"texto": "Pouco depois o final do jogo e a festa do Benfica pela conquista da nona Supertaça.", "inicio": 13, "fim": 19}
+  #  {"texto": "cartão"},
+    {"texto": "vermelho" , "inicio": 0, "fim": 6},
+  #  {"texto": "cinco" }
 ])
 
 # Thirty videos worth of data
@@ -78,7 +78,7 @@ sequence_length = 30
 
 
 # Define a taxa de quadros do vídeo
-fps = 30
+fps = 70
 
 # Função para calcular os frames correspondentes a um intervalo de tempo
 def calcular_frames_intervalo(inicio, fim):
@@ -91,11 +91,11 @@ def calcular_frames_intervalo(inicio, fim):
 ## Colect 30 frames of video motion on respective folder MP_DATA
 
 # Caminho para o arquivo de vídeo que você deseja carregar
-video_path = 'C:/Users/jessi/Desktop/TESE/WHISPER/benficaPSL.mp4'
+video_path = 'C:/Users/jessi/Desktop/TESE/WHISPER/vermelho/vermelho.mp4'
 
 # Inicialize a captura de vídeo usando o caminho do arquivo
 cap = cv2.VideoCapture(video_path)
-
+cap.set(cv2.CAP_PROP_POS_MSEC, 2000) ##iniciar o video sem os primeiros 2 segundos de delay com a legenda
 # Verifique se a captura de vídeo foi aberta corretamente
 if not cap.isOpened():
     print("Erro ao abrir o vídeo.")
@@ -158,7 +158,7 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
                     frame_path = os.path.join(DATA_PATH, "texto " + str( index), str(1), "images", f'image{frame_num}.png')
                     cv2.imwrite(frame_path, resized_frame) 
                     # Exibir informações na tela
-                    print(f"Salvar imagem para {frame_path}")
+                  #  print(f"Salvar imagem para {frame_path}")
 
                 except Exception as e:
                     print("Erro:", e)
