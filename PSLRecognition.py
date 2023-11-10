@@ -14,7 +14,7 @@ predictions = []
 threshold = 0.5
 
 # Actions that we try to detect
-actions = np.array(['ola', 'obrigada'])
+actions = np.array(['ola', 'obrigada', 'bom dia', 'boa noite'])
 
 ### 2. Keypoints using MP Holistic #####
 

@@ -5,8 +5,6 @@
 import cv2
 import numpy as np
 import os
-from matplotlib import pyplot as plt
-import time
 import mediapipe as mp
 
 
@@ -63,7 +61,7 @@ def extract_keypoints(results):
 DATA_PATH = os.path.join('MP_Data') 
 
 # Actions that we try to detect
-actions = np.array(['ola', 'obrigada'])
+actions = np.array(['ola', 'obrigada', 'bom dia', 'boa noite'])
 
 # Thirty videos worth of data
 no_sequences = 30
@@ -121,8 +119,11 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
                                 cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),1,cv2.LINE_AA)
 
                 
+
+                
                 # NEW Export keypoints
                 keypoints = extract_keypoints(results)
+                print(keypoints)
                 npy_path = os.path.join(DATA_PATH, action, str(sequence), str(frame_num))
                 np.save(npy_path, keypoints)
                  #Show to Screen

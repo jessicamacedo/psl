@@ -1,13 +1,7 @@
-import cv2
 import numpy as np
 import os
-from matplotlib import pyplot as plt
-import time
-import mediapipe as mp
-from scipy import stats
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
-import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM,Dense
 from tensorflow.keras.callbacks import TensorBoard
@@ -16,9 +10,7 @@ from tensorflow.keras.callbacks import TensorBoard
 DATA_PATH = os.path.join('MP_Data') 
 
 # Actions that we try to detect
-actions = np.array(['ola', 'obrigada'])
-
-
+actions = np.array(['ola', 'obrigada', 'bom dia', 'boa noite'])
 
 # Thirty videos worth of data
 no_sequences = 30
@@ -27,8 +19,6 @@ sequence_length = 30
 label_map = {label:num for num, label in enumerate(actions)}
 
 print(label_map)
-
-
 
 sequences, labels = [], []
 for action in actions:
@@ -145,10 +135,16 @@ print("teste 1:" , actions[np.argmax(Y_test[1])])
 print("teste 2:" , actions[np.argmax(res[2])])
 print("teste 2:" , actions[np.argmax(Y_test[2])])
 
+print("teste 3:" , actions[np.argmax(res[3])])
+print("teste 3:" , actions[np.argmax(Y_test[3])])
+
+print("teste 4:" , actions[np.argmax(res[4])])
+print("teste 4:" , actions[np.argmax(Y_test[4])])
+
 
 #### 9. Save Model ####
 
-model.save('OlaObrigada.h5')
+model.save('keras.h5')
 
 ## del model
 ## model.load_weights('handSignPSL.h5')
