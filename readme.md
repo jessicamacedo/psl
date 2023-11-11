@@ -9,6 +9,12 @@ python .\actionDetectionPSLDataset-webcam.py
 ### DATASET COLLECTION VIA VIDEOS IMPORT
 
 python .\actionDetectionPSLDataset-videos.py 
+python .\actionDetectionPSLDataset-vermelho.py 
+
+
+### DATASET COLLECTION VIA VIDEOS IMPORT FROM INFOPEDIA
+
+python .\actionDetectionPSLDataset-videos-infopedia.py 
 
 
 ### CRIAÇAO E TREINO DO DATASET
