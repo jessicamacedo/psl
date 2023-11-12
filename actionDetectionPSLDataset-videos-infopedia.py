@@ -53,6 +53,13 @@ def extract_keypoints(results):
     return np.concatenate([pose, face, lh, rh])
 
 
+def extract_keypoints_zeros():
+    pose = np.zeros(33*4)
+    lh = np.zeros(21*3) #21 is array lenght of landmarck+ 3 is coordinate values  x,y,z
+    rh = np.zeros(21*3)
+    face = np.zeros(468*3)
+    return np.concatenate([pose, face, lh, rh])
+
 ### 4. Setup Folders for Collection ###
 
 # Path for exported data, numpy arrays
@@ -107,7 +114,7 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
             clip = VideoFileClip(video_path)
 
             # Videos are going to be dynamic calculated frames in length with 30 FPS
-            n_video_sequence_length = int(clip.duration) * 30
+            n_video_sequence_length = 30 #int(clip.duration) * 30
             print('n_video_sequence_length: ' , n_video_sequence_length)
             clip.close()
 
@@ -116,52 +123,61 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
 
                 # Read feed
                 ret, frame = cap.read()
-                print(ret)
+                #print(ret)
 
                 if not ret:
                     # Se não foi possível ler o frame, saia do loop ou trate o erro de alguma forma
-                    break
+                          
+                    keypoints = extract_keypoints_zeros()
+                    print('ZEROOOOOS', keypoints)
+                    npy_path = os.path.join(DATA_PATH, action, str(n_video), str(frame_num))
+                    print('npy_path: ', npy_path)
+                    np.save(npy_path, keypoints)
 
-                # Make detections
-                image, results = mediapipe_detection(frame, holistic)
+                else:
 
-                # Draw landmarks
-                draw_styled_landmarks(image, results)
-                
-                # NEW Apply wait logic
-                if frame_num == 0: 
-                    cv2.putText(image,'Starting Collection',(120,200),
-                                cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),4,cv2.LINE_AA)
-                    cv2.putText(image,'Collecting frames for {} Video Number {}'.format(action,n_video),(15,12),
-                                cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),1,cv2.LINE_AA)
-                    cv2.waitKey(2000)
-                else: 
-                    cv2.putText(image,'Collecting frames for {} Video Number {}'.format(action,n_video),(15,12),
-                                cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),1,cv2.LINE_AA)
+                    # Make detections
+                    image, results = mediapipe_detection(frame, holistic)
 
-                
-                # NEW Export keypoints
-                keypoints = extract_keypoints(results)
-                npy_path = os.path.join(DATA_PATH, action, str(n_video), str(frame_num))
-                print('npy_path: ', npy_path)
-                np.save(npy_path, keypoints)
-                #Show to Screen
+                    # Draw landmarks
+                    draw_styled_landmarks(image, results)
+                    
+                    # NEW Apply wait logic
+                    if frame_num == 0: 
+                        cv2.putText(image,'Starting Collection',(120,200),
+                                    cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),4,cv2.LINE_AA)
+                        cv2.putText(image,'Collecting frames for {} Video Number {}'.format(action,video_nome),(15,12),
+                                    cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),1,cv2.LINE_AA)
+                        cv2.waitKey(1000)
+                    else: 
+                        cv2.putText(image,'Collecting frames for {} Video Number {}'.format(action,video_nome),(15,12),
+                                    cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,0,255),1,cv2.LINE_AA)
 
-                try:
-                    # Redimensionar e salvar frame como imagem (PNG)
-                    resized_frame = cv2.resize(frame, (500, 500))  # Redimensionar o frame
-                    frame_path = os.path.join(DATA_PATH, action, str(n_video), "images", f'image{frame_num}.png')
-                    cv2.imwrite(frame_path, resized_frame) 
+                    
+                    # NEW Export keypoints
+                    keypoints = extract_keypoints(results)
+                    npy_path = os.path.join(DATA_PATH, action, str(n_video), str(frame_num))
+                    print('npy_path: ', npy_path)
+                    np.save(npy_path, keypoints)
 
-                except Exception as e:
-                    print("Erro:", e)
 
-                cv2.imshow('Dataset collection', image)
+                    #Show to Screen
 
-                # Break gracefully
-                if cv2.waitKey(10) & 0xFF == ord('q'):
-                    break
-    
+                    try:
+                        # Redimensionar e salvar frame como imagem (PNG)
+                        resized_frame = cv2.resize(frame, (500, 500))  # Redimensionar o frame
+                        frame_path = os.path.join(DATA_PATH, action, str(n_video), "images", f'image{frame_num}.png')
+                        cv2.imwrite(frame_path, resized_frame) 
+
+                    except Exception as e:
+                        print("Erro:", e)
+
+                    cv2.imshow('Dataset collection', image)
+
+                    # Break gracefully
+                    if cv2.waitKey(10) & 0xFF == ord('q'):
+                        break
+        
                     
     cap.release()
     cv2.destroyAllWindows()

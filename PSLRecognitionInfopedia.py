@@ -11,7 +11,7 @@ model = load_model('infopedia.h5')
 sequence = []
 sentence = []
 predictions = []
-threshold = 0.5
+threshold = 0.65
 
 # Diretório que contém os folders com vídeos
 diretorio_total = 'C:/Users/jessi/Desktop/TESE/MODELS-PSL/GIT/lgp-lstm/infopediavideos'
@@ -130,7 +130,7 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
                 cv2.putText(image, 'SEQUENCE {}'.format(len(sequence)) , (100,400), cv2.FONT_HERSHEY_SIMPLEX, 1, (255 ,0, 0), 2, cv2.LINE_AA)
 
                 if len(sequence) == 30:
-                    res = model.predict(np.expand_dims(sequence, axis=0))[0]
+                    res = model.predict(np.expand_dims(sequence, axis=0))[0] ## !!!! adaptar o tempo dinamicamente 
                     print(res)
                     print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', actions[np.argmax(res)])
                     sequence = []
