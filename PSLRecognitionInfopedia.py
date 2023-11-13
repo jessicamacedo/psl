@@ -5,14 +5,14 @@ from matplotlib import pyplot as plt
 from keras.models import load_model
 import os
 
-model = load_model('infopedia.h5')
+model = load_model('infopedia320semRandom.h5')
 
 # 1. New detection variables
 sequence = []
 sentence = []
 predictions = []
 threshold = 0.65
-
+#['adeus' 'eu' 'gostar' 'ler' 'livro' 'ola']
 # Diretório que contém os folders com vídeos
 diretorio_total = 'C:/Users/jessi/Desktop/TESE/MODELS-PSL/GIT/lgp-lstm/infopediavideos'
 
@@ -133,10 +133,13 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
                     res = model.predict(np.expand_dims(sequence, axis=0))[0] ## !!!! adaptar o tempo dinamicamente 
                     print(res)
                     print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', actions[np.argmax(res)])
+                    
                     sequence = []
                     
                     #3. Viz logic
+                  
                     if res[np.argmax(res)] > threshold: 
+                        print('confidence: ' , res[np.argmax(res)])
                         if len(sentence) > 0: 
                             if actions[np.argmax(res)] != sentence[-1]:
                                 sentence.append(actions[np.argmax(res)])
@@ -150,6 +153,7 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
                 #image = prob_viz(res, actions, image, colors)
                 cv2.rectangle(image, (0,0), (640, 40), (245, 117, 16), -1)
                 cv2.putText(image, ' '.join(sentence), (3,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+               
 
             # Show to screen
             cv2.imshow('Start', image)
